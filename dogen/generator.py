@@ -161,11 +161,22 @@ class Generator(object):
         self.log.info("Additional scripts provided, installing them...")
         output_scripts = os.path.join(self.output, "scripts")
 
+        self.cfg['additional_repos'] = []
+        repo_file_required = self.cfg.get('packages') or self.cfg.get('rpms')
+
         if not os.path.exists(output_scripts):
             os.makedirs(output_scripts)
 
         for f in self.additional_scripts:
             self.log.debug("Handling '%s' file..." % f)
+
+            if os.path.basename(f).endswith(".repo"):
+                if not repo_file_required:
+                    self.log.debug("File '%s' is a repo file but we have no rpms or packages to install, skipping adding this repo file..." % f)
+                    continue
+                else:
+                    self.cfg['additional_repos'].append(os.path.splitext(os.path.basename(f))[0])
+
             if Tools.is_url(f):
                 self._fetch_file(f, os.path.join(output_scripts, os.path.basename(f)))
             else:
@@ -174,18 +185,6 @@ class Generator(object):
 
                 self.log.debug("Copying '%s' file to target scripts directory..." % f)
                 shutil.copy(f, output_scripts)
-
-    def _handle_custom_repo_files(self):
-        self.cfg['additional_repos'] = []
-        repo_files = glob.glob(os.path.join(self.output, "scripts", "*.repo"))
-
-        if not repo_files:
-            return
-
-        self.log.debug("Found following additional repo files: %s" % ", ".join(repo_files))
-
-        for f in repo_files:
-            self.cfg['additional_repos'].append(os.path.splitext(os.path.basename(f))[0])
 
     def _validate_cfg(self):
         """
@@ -249,8 +248,6 @@ class Generator(object):
         # Additional scripts (not package scripts)
         if self.additional_scripts:
             self._handle_additional_scripts()
-
-        self._handle_custom_repo_files()
 
         self.render_from_template()
         sources = self.handle_sources()
