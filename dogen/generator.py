@@ -28,6 +28,7 @@ class Generator(object):
         self.template = args.template
         self.scripts_path = args.scripts_path
         self.additional_scripts = args.additional_script
+        self.ignore_version = args.ignore_version
 
         ssl_verify = None
         if args.skip_ssl_verification:
@@ -109,7 +110,11 @@ class Generator(object):
             # Check if the current runnig version of Dogen
             # is the one the descriptor is expecting.
             if required_version != version:
-                raise Error("You try to parse descriptor that requires Dogen version %s, but you run version %s" % (required_version, version))
+                message = "You try to parse descriptor that requires Dogen version %s, but you run version %s" % (required_version, version)
+                if self.ignore_version:
+                    self.log.warn(message)
+                else:
+                    raise Error(message)
 
         ssl_verify = dogen_cfg.get('ssl_verify')
 
