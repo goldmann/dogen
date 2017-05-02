@@ -20,7 +20,7 @@ class TestConfig(unittest.TestCase):
         self.descriptor.write(self.basic_config.encode())
         self.args = argparse.Namespace(path=self.descriptor.name, output="target", without_sources=False,
                                        template=None, scripts_path=None, additional_script=None,
-                                       skip_ssl_verification=None)
+                                       skip_ssl_verification=None, params={})
     def tearDown(self):
         os.remove(self.descriptor.name)
 

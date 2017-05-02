@@ -26,7 +26,7 @@ class TestPackage(unittest.TestCase):
     def prepare_dogen(self, repo_files_dir=None):
         args = argparse.Namespace(path=self.descriptor.name, output=self.target_dir, without_sources=None,
                                   template=None, scripts_path=None, additional_script=None,
-                                  skip_ssl_verification=None, repo_files_dir=repo_files_dir)
+                                  skip_ssl_verification=None, repo_files_dir=repo_files_dir, params={})
         self.dogen = Generator(self.log, args, [Repo])
 
     def test_custom_repo_files_should_add_two(self):

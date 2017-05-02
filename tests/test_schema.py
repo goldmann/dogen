@@ -13,7 +13,7 @@ class TestSchemaMeta(type):
             def test(self):
                 args = argparse.Namespace(path=path, output="target", without_sources=None,
                                           template=None, scripts_path=None, additional_script=None,
-                                          skip_ssl_verification=None)
+                                          skip_ssl_verification=None, params={})
                 generator = Generator(self.log, args)
                 if good:
                     generator.configure()

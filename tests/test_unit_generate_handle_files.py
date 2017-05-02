@@ -12,7 +12,7 @@ class TestURL(unittest.TestCase):
         self.log = mock.Mock()
         args = argparse.Namespace(path="image.yaml", output="target", without_sources=None,
                                   template=None, scripts_path=None, additional_script=None,
-                                  skip_ssl_verification=None)
+                                  skip_ssl_verification=None, params={})
         self.generator = Generator(self.log, args)
 
     def test_local_file(self):
@@ -29,7 +29,7 @@ class TestFetchFile(unittest.TestCase):
         self.log = mock.Mock()
         args = argparse.Namespace(path="image.yaml", output="target", without_sources=None,
                                   template=None, scripts_path=None, additional_script=None,
-                                  skip_ssl_verification=None)
+                                  skip_ssl_verification=None, params={})
         self.generator = Generator(self.log, args)
 
     @mock.patch('dogen.generator.requests.get')
@@ -72,13 +72,13 @@ class TestCustomTemplateHandling(unittest.TestCase):
         self.log = mock.Mock()
         args = argparse.Namespace(path="image.yaml", output="target", without_sources=None,
                                   template="http://host/custom-template", scripts_path=None,
-                                  additional_script=None, skip_ssl_verification=None)
+                                  additional_script=None, skip_ssl_verification=None, params={})
         self.generator = Generator(self.log, args)
 
     def test_do_not_fail_if_no_template_is_provided(self):
         args = argparse.Namespace(path="image.yaml", output="target", without_sources=None,
                                   template=None, scripts_path=None, additional_script=None,
-                                  skip_ssl_verification=None)
+                                  skip_ssl_verification=None, params={})
         self.generator = Generator(self.log, args)
 
         fetch_file_mock = mock.Mock()

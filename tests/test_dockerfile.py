@@ -31,7 +31,7 @@ class TestDockerfile(unittest.TestCase):
         os.mkdir(self.target)
         self.args = argparse.Namespace(path=self.yaml, output=self.target, without_sources=None,
                                        template=None, scripts_path=None, additional_script=None,
-                                       skip_ssl_verification=None)
+                                       skip_ssl_verification=None, params={})
         with open(self.yaml, 'wb') as f:
             f.write(self.basic_config.encode())
 
