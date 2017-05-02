@@ -56,6 +56,7 @@ class CLI(object):
         parser.add_argument('--skip-ssl-verification', action='store_true', help='Should we skip SSL verification when retrieving data?')
         parser.add_argument('--scripts-path', help='Location of the scripts directory containing script packages.')
         parser.add_argument('--additional-script', action='append', help='Location of additional script (can be url). Can be specified multiple times.')
+        parser.add_argument('--param', action='append', dest='params', help='List of key and value pairs (format: KEY=value) used for substitution in the image descriptor. Can be specified multiple times.')
         parser.add_argument('--template', help='Path to custom template (can be url)')
 
         parser.add_argument('path', help="Path to yaml descriptor to process")
@@ -68,6 +69,19 @@ class CLI(object):
 
         parser.epilog = epilog
         args = parser.parse_args()
+
+        params = {}
+
+        if args.params:
+            for param in args.params:
+                if '=' not in param:
+                    self.log.error("The --param argument with value '%s' could not be parsed. Please make sure you use the 'KEY=value' format" % param)
+                    sys.exit(1)
+
+                k, v = param.split("=", 1)
+                params[k] = v
+
+        args.params = params
 
         if args.verbose:
             self.log.setLevel(logging.DEBUG)

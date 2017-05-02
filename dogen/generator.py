@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import hashlib
+import re
 import os
 import shutil
+import six
 import requests
 import yaml
 import tempfile
@@ -29,6 +31,7 @@ class Generator(object):
         self.template = args.template
         self.scripts_path = args.scripts_path
         self.additional_scripts = args.additional_script
+        self.params = args.params
 
         ssl_verify = None
         if args.skip_ssl_verification:
@@ -203,7 +206,16 @@ class Generator(object):
             plugin.extend_schema(schema)
 
         with open(self.descriptor, 'r') as stream:
-            self.cfg = yaml.safe_load(stream)
+            content = stream.read()
+
+            for k, v in six.iteritems(self.params):
+                self.log.debug("Substituting '%s' with '%s' value..." % (k, v))
+                content = re.sub(r"{{%s.*}}" % k, v, content)
+
+            # See if there any params without substitutions. If yes, use specified default values.
+            content = re.sub(r"{{\w+:(.*)}}", '\g<1>', content)
+
+            self.cfg = yaml.safe_load(content)
 
         c = Core(source_data=self.cfg, schema_data=schema)
         try:
