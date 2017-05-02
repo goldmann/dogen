@@ -112,9 +112,6 @@ class TestDockerfile(unittest.TestCase):
             self.assertRegexpMatches(dockerfile, regex)
 
     def test_volumes(self):
-        """
-        Test that cmd: is mapped into a CMD instruction
-        """
         with open(self.yaml, 'ab') as f:
             f.write("volumes:\n  - '/var/lib'\n  - '/usr/lib'".encode())
 
@@ -127,4 +124,54 @@ class TestDockerfile(unittest.TestCase):
         with open(os.path.join(self.target, "Dockerfile"), "r") as f:
             dockerfile = f.read()
             regex = re.compile(r'.*VOLUME \["/var/lib"\]\nVOLUME \["/usr/lib"\]',  re.MULTILINE)
+            self.assertRegexpMatches(dockerfile, regex)
+
+    def test_default_substitution(self):
+        with open(self.yaml, 'ab') as f:
+            f.write("from: {{FROM:rhel:7}}\nversion: 1.0".encode())
+
+        generator = Generator(self.log, self.args)
+        generator.configure()
+        generator.render_from_template()
+
+        self.assertEqual(generator.cfg['from'], 'rhel:7')
+
+        with open(os.path.join(self.target, "Dockerfile"), "r") as f:
+            dockerfile = f.read()
+            regex = re.compile(r'.*FROM rhel:7',  re.MULTILINE)
+            self.assertRegexpMatches(dockerfile, regex)
+
+    def test_substitution_with_parameters(self):
+        with open(self.yaml, 'ab') as f:
+            f.write("from: {{FROM:rhel:7}}\nversion: 1.0".encode())
+
+        self.args.params = {'FROM': 'centos:7'}
+
+        generator = Generator(self.log, self.args)
+        generator.configure()
+        generator.render_from_template()
+
+        self.assertEqual(generator.cfg['from'], 'centos:7')
+
+        with open(os.path.join(self.target, "Dockerfile"), "r") as f:
+            dockerfile = f.read()
+            regex = re.compile(r'.*FROM centos:7',  re.MULTILINE)
+            self.assertRegexpMatches(dockerfile, regex)
+
+    def test_substitution_of_multiple_parameters(self):
+        with open(self.yaml, 'ab') as f:
+            f.write("from: rhel:7\ndescription: 'Image {{VERSION}}'\nenvs:\n  information:\n    - name: VERSION\n      value: {{VERSION}}\n".encode())
+
+        self.args.params = {'VERSION': '1.0'}
+
+        generator = Generator(self.log, self.args)
+        generator.configure()
+        generator.render_from_template()
+
+        self.assertEqual(generator.cfg['description'], 'Image 1.0')
+        self.assertEqual(generator.cfg['envs']['information'], [{'name': 'VERSION', 'value': 1.0}])
+
+        with open(os.path.join(self.target, "Dockerfile"), "r") as f:
+            dockerfile = f.read()
+            regex = re.compile(r'.*VERSION="1.0".*',  re.MULTILINE)
             self.assertRegexpMatches(dockerfile, regex)
