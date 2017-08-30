@@ -94,6 +94,8 @@ class Artifact(object):
             return self
         logger.debug("Fetching '%s' as %s" % (self.url, destination))
 
+        download_file(self.url, destination)
+
         res = requests.get(self.url, verify=self.ssl_verify, stream=True)
         if res.status_code != 200:
             raise DogenError("Could not download file from %s" % self.url)
@@ -103,19 +105,30 @@ class Artifact(object):
         return self
 
 
-def prepare_external_repositories(repo_files_dir, image_dir):
-    if not os.path.exists(repo_files_dir):
-        raise DogenError("Directory '%s' with additional repository definitions doesn't exist!"
-                         % repo_files_dir)
+def download_file(url, destination):
+    res = requests.get(url, verify=False, stream=True)
+    if res.status_code != 200:
+        raise DogenError("Could not download file from %s" % url)
+    with open(destination, 'wb') as f:
+        for chunk in res.iter_content(chunk_size=1024):
+            f.write(chunk)
+
+def prepare_repositories(image_dir):
+    repos = os.getenv("DOGEN_REPOS")
+
+    if not repos:
+        return
+
+    destination = os.path.join(image_dir, 'repos')
+    os.makedirs(destination)
+
+    for repo in repos.split(','):
+        download_file(repo, os.path.join(destination, repo.split('/')[-1]))
 
     added_repos = []
-    repo_files = glob.glob(os.path.join(repo_files_dir, "*.repo"))
-    target_dir = os.path.join(image_dir, 'repos')
-    os.makedirs(target_dir)
+    repo_files = glob.glob(os.path.join(destination, "*.repo"))
 
     for f in repo_files:
-        logger.info("Copying %s repo file..." % os.path.basename(f))
-        shutil.copy2(f, target_dir)
         added_repos.append(os.path.splitext(os.path.basename(f))[0])
 
     return added_repos

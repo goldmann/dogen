@@ -54,9 +54,6 @@ class Dogen(object):
                                                  'template.jinja'),
                             help='Path to custom template (can be url)')
 
-        parser.add_argument('--repo-files-dir',
-                            help='Provides path to directory with *.repo files that should be used to install rpms')
-
         parser.add_argument('descriptor_path',
                             help="Path to yaml descriptor to process")
 
@@ -93,7 +90,7 @@ class Dogen(object):
                                   self.args.target,
                                   self.args.overrides)
             generator.prepare_modules()
-            generator.prepare_repositories(self.args.repo_files_dir)
+            generator.prepare_repositories()
             generator.render_dockerfile(self.args.template)
             generator.fetch_artifacts()
         except KeyboardInterrupt as e:
